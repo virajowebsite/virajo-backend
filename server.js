@@ -38,14 +38,6 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', jobApplicationRoutes);
 app.use('/api/applyJob', applyJobRoutes); // Changed from 'apply-job' to 'applyJob' to match frontend
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, 'client/build')));
-
-// Handle React routing, return all requests to React app
-app.get('*', function(req, res) {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
-
 // Define port
 const PORT = process.env.PORT || 5000;
 
