@@ -140,26 +140,26 @@ router.post('/', (req, res) => {
         });
       }
       
-      // Extract form data
+      // FIXED: Extract form data - Frontend sends 'city', not 'location'
       const { 
         name, 
         email, 
         phone, 
-        location,
+        city,        // ✅ CHANGED FROM 'location' TO 'city'
         experience, 
         position
       } = req.body;
       
-      console.log('📊 Extracted fields:', { name, email, phone, location, experience, position });
+      console.log('📊 Extracted fields:', { name, email, phone, city, experience, position });
       
-      // Check for required fields
-      if (!name || !email || !phone || !location || !experience || !position) {
+      // Check for required fields - FIXED: Check 'city' instead of 'location'
+      if (!name || !email || !phone || !city || !experience || !position) {
         console.error('❌ Missing required fields');
         console.log('Missing field analysis:', {
           name: !name ? 'MISSING' : 'OK',
           email: !email ? 'MISSING' : 'OK',
           phone: !phone ? 'MISSING' : 'OK',
-          location: !location ? 'MISSING' : 'OK',
+          city: !city ? 'MISSING' : 'OK',          // ✅ CHANGED FROM 'location' TO 'city'
           experience: !experience ? 'MISSING' : 'OK',
           position: !position ? 'MISSING' : 'OK'
         });
@@ -178,7 +178,7 @@ router.post('/', (req, res) => {
             name: !name,
             email: !email,
             phone: !phone,
-            location: !location,
+            city: !city,                            // ✅ CHANGED FROM 'location' TO 'city'
             experience: !experience,
             position: !position
           }
@@ -229,8 +229,8 @@ router.post('/', (req, res) => {
         lastName: lastName || "Not provided", // Provide default if empty
         email: email,
         phone: phone,
-        address: location, // Use location as address
-        city: location,    // Use location as city
+        address: city,    // ✅ CHANGED FROM 'location' TO 'city'
+        city: city,       // ✅ CHANGED FROM 'location' TO 'city'
         resume: req.file.path,
         experience: experience,
         source: 'Website',
