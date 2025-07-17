@@ -1,4 +1,4 @@
-// server.js - BASIC PRERENDER SETUP (NO TOKEN REQUIRED)
+// server.js - COMPLETE VERSION WITH HOMEPAGE ROUTE FOR PRERENDER INTEGRATION
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -117,7 +117,8 @@ app.use(prerender
     '^/contact',
     '^/careers',
     '^/jobs',
-    '^/blog'
+    '^/blog',
+    '^/prerender-test'
   ])
   .blacklist([
     '^/api/',
@@ -133,6 +134,112 @@ console.log('✅ Basic Prerender.io configured');
 
 // Serve uploaded files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// HOMEPAGE ROUTE FOR PRERENDER.IO DETECTION
+app.get('/', (req, res) => {
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot = /googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|whatsapp|skypeuripreview|linkedinbot|slackbot|telegrambot|applebot|discordbot|bitlybot|tumblr|pinterest|reddit|crawler|spider|scraper/i.test(userAgent.toLowerCase());
+  
+  console.log('🏠 Homepage accessed by:', userAgent);
+  console.log('🤖 Is bot:', isBot);
+  
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virajo Backend - Prerender Integration</title>
+    <meta name="description" content="Virajo backend service with Prerender.io integration for SEO optimization">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Virajo Backend Service">
+    <meta property="og:description" content="Backend service with Prerender.io integration">
+    <meta property="og:type" content="website">
+</head>
+<body>
+    <header>
+        <h1>Virajo Backend Service</h1>
+    </header>
+    
+    <main>
+        <section>
+            <h2>Prerender.io Integration Active</h2>
+            <p>This is the backend service for Virajo website with Prerender.io integration for SEO optimization.</p>
+            <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
+            <p><strong>User Agent:</strong> ${userAgent}</p>
+            <p><strong>Bot Detected:</strong> ${isBot ? 'Yes' : 'No'}</p>
+            <p><strong>Prerender Status:</strong> Basic setup active</p>
+        </section>
+        
+        <section>
+            <h2>Available Endpoints:</h2>
+            <ul>
+                <li><a href="/health">/health</a> - Health check endpoint</li>
+                <li><a href="/api/test">/api/test</a> - API test endpoint</li>
+                <li><a href="/robots.txt">/robots.txt</a> - Robots.txt file</li>
+                <li><a href="/prerender-test">/prerender-test</a> - Prerender test page</li>
+            </ul>
+        </section>
+        
+        <section>
+            <h2>API Routes:</h2>
+            <ul>
+                <li>/api/blogs - Blog management</li>
+                <li>/api/careers - Career opportunities</li>
+                <li>/api/contact - Contact management</li>
+                <li>/api/jobs - Job listings</li>
+                <li>/api/applications - Job applications</li>
+            </ul>
+        </section>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 Virajo. All rights reserved.</p>
+    </footer>
+    
+    <script>
+        console.log('Page loaded at:', new Date().toISOString());
+        console.log('Prerender integration active');
+        console.log('Bot detected:', ${isBot});
+    </script>
+</body>
+</html>`);
+});
+
+// Prerender test route
+app.get('/prerender-test', (req, res) => {
+  const userAgent = req.headers['user-agent'] || '';
+  const isBot = /googlebot|bingbot|yandex|baiduspider|twitterbot|facebookexternalhit|whatsapp|skypeuripreview|linkedinbot|slackbot|telegrambot|applebot|discordbot|bitlybot|tumblr|pinterest|reddit|crawler|spider|scraper/i.test(userAgent.toLowerCase());
+  
+  console.log('🧪 Prerender test page accessed');
+  
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Prerender Integration Test - Virajo</title>
+    <meta name="description" content="Test page for Prerender.io integration verification">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+    <h1>Prerender Test Page</h1>
+    <p>This page should be detectable by Prerender.io for SEO integration verification.</p>
+    <p><strong>Current time:</strong> ${new Date().toISOString()}</p>
+    <p><strong>User Agent:</strong> ${userAgent}</p>
+    <p><strong>Bot Detected:</strong> ${isBot ? 'Yes' : 'No'}</p>
+    
+    <div id="dynamic-content">
+        <h2>Dynamic Content Test</h2>
+        <p>This content should be rendered by Prerender.io for search engines.</p>
+    </div>
+    
+    <script>
+        // Test JavaScript execution
+        console.log('Prerender test page loaded');
+        document.getElementById('dynamic-content').innerHTML += '<p>JavaScript executed successfully!</p>';
+    </script>
+</body>
+</html>`);
+});
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -165,13 +272,17 @@ app.get('/robots.txt', (req, res) => {
   res.type('text/plain');
   res.send(`User-agent: *
 Allow: /
-Sitemap: ${process.env.FRONTEND_URL || 'https://virajo.in'}/sitemap.xml
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
 
 User-agent: Googlebot
 Allow: /
+Disallow: /api/
 
 User-agent: Bingbot
-Allow: /`);
+Allow: /
+Disallow: /api/`);
 });
 
 // Import routes
@@ -210,12 +321,8 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, 'build')));
   
   // Handle React routing - send all non-API requests to React app
-  app.get('*', (req, res) => {
-    // Don't serve index.html for API routes
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ error: 'API route not found' });
-    }
-    
+  // This should come AFTER all your defined routes
+  app.get('/app/*', (req, res) => {
     console.log('📄 Serving React app for:', req.path);
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
@@ -229,7 +336,18 @@ if (process.env.NODE_ENV !== 'production') {
       success: false,
       message: 'Route not found',
       path: req.originalUrl,
-      method: req.method
+      method: req.method,
+      availableRoutes: [
+        '/',
+        '/health',
+        '/api/test',
+        '/prerender-test',
+        '/robots.txt',
+        '/api/blogs',
+        '/api/careers',
+        '/api/contact',
+        '/api/jobs'
+      ]
     });
   });
 }
@@ -263,6 +381,8 @@ app.listen(PORT, () => {
   console.log(`🌐 Environment: ${process.env.NODE_ENV}`);
   console.log(`🔗 Health check: http://localhost:${PORT}/health`);
   console.log(`🧪 Test route: http://localhost:${PORT}/api/test`);
+  console.log(`🏠 Homepage: http://localhost:${PORT}/`);
+  console.log(`🧪 Prerender test: http://localhost:${PORT}/prerender-test`);
   console.log(`📋 Apply job route: http://localhost:${PORT}/api/applyJob`);
   console.log(`🔒 CORS allowed origins:`, allowedOrigins);
   console.log(`🎭 Prerender.io: Basic setup (no token required)`);
