@@ -1,5 +1,6 @@
 const ContactPageForm = require('../models/ContactPageForm');
 const nodemailer = require('nodemailer');
+const { sendContactPageNotification } = require('../services/emailService');
 
 // Get all contact page form submissions
 exports.getAllContactPageForms = async (req, res) => {
@@ -58,7 +59,7 @@ exports.createContactPageForm = async (req, res) => {
     });
     
     // Send email notification
-    const emailSent = await sendEmailNotification({
+    const emailResult = await sendContactPageNotification({
       firstName,
       lastName,
       email,
@@ -66,10 +67,12 @@ exports.createContactPageForm = async (req, res) => {
       message
     });
     
+    console.log('Email notification result:', emailResult);
+    
     res.status(201).json({
       success: true,
       data: contactForm,
-      emailSent
+      emailSent: emailResult.success
     });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -111,51 +114,5 @@ exports.deleteContactPageForm = async (req, res) => {
       success: false,
       error: 'Server Error'
     });
-  }
-};
-
-// Helper function to send email notification
-const sendEmailNotification = async (formData) => {
-  try {
-    // Create a test account if you don't have real credentials
-    // For production, use your actual SMTP credentials
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: process.env.EMAIL_PORT,
-      secure: process.env.EMAIL_SECURE === 'true',
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-      }
-    });
-    
-    // Setup email data
-    const mailOptions = {
-      from: `"Virajo IT Website" <${process.env.EMAIL_FROM}>`,
-      to: process.env.EMAIL_TO,
-      subject: 'New Contact Page Form Submission',
-      html: `
-        <h2>New Contact Form Submission from Main Contact Page</h2>
-        <p><strong>Name:</strong> ${formData.firstName} ${formData.lastName}</p>
-        <p><strong>Email:</strong> ${formData.email}</p>
-        <p><strong>Phone:</strong> ${formData.phone || 'Not provided'}</p>
-        <p><strong>Message:</strong></p>
-        <p>${formData.message}</p>
-      `
-    };
-    
-    // Send mail
-    const info = await transporter.sendMail(mailOptions);
-    
-    return {
-      success: true,
-      messageId: info.messageId
-    };
-  } catch (error) {
-    console.error('Email sending failed:', error);
-    return {
-      success: false,
-      error: error.message
-    };
   }
 };

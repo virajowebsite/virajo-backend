@@ -1,9 +1,10 @@
-// routes/applyJob.js - FINAL FIXED VERSION
+// routes/applyJob.js - COMPLETE VERSION WITH EMAIL NOTIFICATION
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { sendJobApplicationNotification } = require('../services/emailService');
 
 // Import the ApplyJob model
 let ApplyJob;
@@ -140,26 +141,26 @@ router.post('/', (req, res) => {
         });
       }
       
-      // FIXED: Extract form data - Frontend sends 'city', not 'location'
+      // Extract form data - Frontend sends 'city', not 'location'
       const { 
         name, 
         email, 
         phone, 
-        city,        // ✅ CHANGED FROM 'location' TO 'city'
+        city,        
         experience, 
         position
       } = req.body;
       
       console.log('📊 Extracted fields:', { name, email, phone, city, experience, position });
       
-      // Check for required fields - FIXED: Check 'city' instead of 'location'
+      // Check for required fields
       if (!name || !email || !phone || !city || !experience || !position) {
         console.error('❌ Missing required fields');
         console.log('Missing field analysis:', {
           name: !name ? 'MISSING' : 'OK',
           email: !email ? 'MISSING' : 'OK',
           phone: !phone ? 'MISSING' : 'OK',
-          city: !city ? 'MISSING' : 'OK',          // ✅ CHANGED FROM 'location' TO 'city'
+          city: !city ? 'MISSING' : 'OK',
           experience: !experience ? 'MISSING' : 'OK',
           position: !position ? 'MISSING' : 'OK'
         });
@@ -178,14 +179,14 @@ router.post('/', (req, res) => {
             name: !name,
             email: !email,
             phone: !phone,
-            city: !city,                            // ✅ CHANGED FROM 'location' TO 'city'
+            city: !city,
             experience: !experience,
             position: !position
           }
         });
       }
       
-      // FIXED: Extract first and last name properly
+      // Extract first and last name properly
       let firstName = name.trim();
       let lastName = "";
       
@@ -194,9 +195,8 @@ router.post('/', (req, res) => {
         firstName = nameParts[0];
         lastName = nameParts.slice(1).join(' ');
       } else {
-        // If no space in name, use the whole name as firstName and set lastName to empty
         firstName = name.trim();
-        lastName = ""; // Set to empty string instead of "N/A"
+        lastName = "";
       }
       
       console.log('👤 Processed names:', { firstName, lastName });
@@ -222,15 +222,15 @@ router.post('/', (req, res) => {
         });
       }
       
-      // FIXED: Create application data that matches your ApplyJob model exactly
+      // Create application data that matches your ApplyJob model exactly
       const applicationData = {
         position: position,
         firstName: firstName,
-        lastName: lastName || "Not provided", // Provide default if empty
+        lastName: lastName || "Not provided",
         email: email,
         phone: phone,
-        address: city,    // ✅ CHANGED FROM 'location' TO 'city'
-        city: city,       // ✅ CHANGED FROM 'location' TO 'city'
+        address: city,
+        city: city,
         resume: req.file.path,
         experience: experience,
         source: 'Website',
@@ -247,10 +247,26 @@ router.post('/', (req, res) => {
       const savedApplication = await newApplication.save();
       console.log('✅ Application saved successfully:', savedApplication._id);
 
+      // Send email notification
+      console.log('📧 Sending email notification...');
+      const emailResult = await sendJobApplicationNotification({
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        position: position,
+        city: city,
+        experience: experience,
+        resume: req.file ? req.file.filename : null
+      });
+      
+      console.log('Email notification result:', emailResult);
+
       res.status(201).json({
         success: true,
         message: 'Application submitted successfully!',
         applicationId: savedApplication._id,
+        emailSent: emailResult.success,
         data: {
           name: name,
           position: position,

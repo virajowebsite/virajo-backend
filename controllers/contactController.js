@@ -1,5 +1,6 @@
 const Contact = require('../models/Contact');
 const nodemailer = require('nodemailer');
+const { sendFloatingFormNotification } = require('../services/emailService');
 
 // Submit contact form
 exports.submitContact = async (req, res) => {
@@ -7,10 +8,15 @@ exports.submitContact = async (req, res) => {
     const newContact = new Contact(req.body);
     const contact = await newContact.save();
     
-    // Send email notification (you'll need to configure this)
-    // sendEmailNotification(contact);
+    // Send email notification
+    const emailResult = await sendFloatingFormNotification(req.body);
+    console.log('Email notification result:', emailResult);
     
-    res.json({ success: true, message: 'Your message has been sent!' });
+    res.json({ 
+      success: true, 
+      message: 'Your message has been sent!',
+      emailSent: emailResult.success 
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: 'Server Error' });
@@ -62,38 +68,4 @@ exports.deleteContact = async (req, res) => {
     console.error(err);
     res.status(500).json({ message: 'Server Error' });
   }
-};
-
-// Helper function to send email notification
-const sendEmailNotification = (contact) => {
-  // Configure nodemailer (this is just a placeholder - you'll need to add your email service details)
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
-  
-  const mailOptions = {
-    from: process.env.EMAIL_USER,
-    to: 'your-email@virajo.com',
-    subject: 'New Contact Form Submission',
-    text: `
-      Name: ${contact.name}
-      Contact: ${contact.contact}
-      Email: ${contact.email}
-      Company: ${contact.company}
-      Message: ${contact.message}
-      Submitted: ${contact.createdAt}
-    `
-  };
-  
-  transporter.sendMail(mailOptions, function(error, info){
-    if (error) {
-      console.log(error);
-    } else {
-      console.log('Email sent: ' + info.response);
-    }
-  });
 };
