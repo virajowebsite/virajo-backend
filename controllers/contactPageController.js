@@ -1,5 +1,5 @@
 const ContactPageForm = require('../models/ContactPageForm');
-const nodemailer = require('nodemailer');
+
 const sendEmail = require('../services/emailService');
 
 // Get all contact page form submissions

@@ -1,5 +1,5 @@
 const Contact = require('../models/Contact');
-const nodemailer = require('nodemailer');
+
 const sendEmail = require('../services/emailService');
 
 // Submit contact form
