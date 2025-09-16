@@ -1,6 +1,6 @@
 const ContactPageForm = require('../models/ContactPageForm');
 const nodemailer = require('nodemailer');
-const { sendContactPageNotification } = require('../services/emailService');
+const sendEmail = require('../services/emailService');
 
 // Get all contact page form submissions
 exports.getAllContactPageForms = async (req, res) => {
@@ -59,13 +59,13 @@ exports.createContactPageForm = async (req, res) => {
     });
     
     // Send email notification
-    const emailResult = await sendContactPageNotification({
-      firstName,
-      lastName,
-      email,
-      phone,
-      message
-    });
+    const fullName = `${firstName} ${lastName || ''}`.trim();
+const emailResult = await sendEmail({
+  name: fullName,
+  email,
+  phone,
+  message
+});
     
     console.log('Email notification result:', emailResult);
     

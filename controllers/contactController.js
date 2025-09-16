@@ -1,6 +1,6 @@
 const Contact = require('../models/Contact');
 const nodemailer = require('nodemailer');
-const { sendFloatingFormNotification } = require('../services/emailService');
+const sendEmail = require('../services/emailService');
 
 // Submit contact form
 exports.submitContact = async (req, res) => {
@@ -9,7 +9,13 @@ exports.submitContact = async (req, res) => {
     const contact = await newContact.save();
     
     // Send email notification
-    const emailResult = await sendFloatingFormNotification(req.body);
+    const fullName = `${req.body.firstName || ''} ${req.body.lastName || ''}`.trim();
+const emailResult = await sendEmail({
+  name: fullName,
+  email: req.body.email,
+  phone: req.body.phone,
+  message: req.body.message
+});
     console.log('Email notification result:', emailResult);
     
     res.json({ 
