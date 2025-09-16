@@ -1,21 +1,25 @@
-// services/emailService.js - COMPLETE REPLACEMENT
+// services/emailService.js - FINAL VERSION
 const { Resend } = require('resend');
+
+console.log('📧 EmailService loaded - Using Resend API');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-// Main email function
+// Main email function using Resend
 async function sendEmail({ name, email, phone, message }) {
   try {
-    console.log("🚀 Sending contact form notification via Resend...");
+    console.log('🚀 Attempting to send email via Resend...');
+    console.log('📧 Resend API Key present:', !!process.env.RESEND_API_KEY);
+    console.log('📧 Email TO:', process.env.EMAIL_TO);
 
     const result = await resend.emails.send({
       from: 'Virajo Website <onboarding@resend.dev>',
-      to: [process.env.EMAIL_TO], // Uses your EMAIL_TO environment variable
+      to: [process.env.EMAIL_TO],
       subject: 'New Contact Form Submission - Virajo Website',
       replyTo: email,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333;">New Contact Form Submission</h2>
+          <h2>New Contact Form Submission</h2>
           <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
             <p><strong>Name:</strong> ${name}</p>
             <p><strong>Email:</strong> ${email}</p>
@@ -26,44 +30,21 @@ async function sendEmail({ name, email, phone, message }) {
             </div>
           </div>
           <p style="color: #666; font-size: 12px;">
-            Sent from Virajo website - ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+            Sent from Virajo website at ${new Date().toLocaleString()}
           </p>
         </div>
       `
     });
 
-    console.log("✅ Email sent successfully via Resend:", result.data?.id);
+    console.log('✅ Email sent successfully via Resend');
+    console.log('📧 Message ID:', result.data?.id);
+    
     return { success: true, messageId: result.data?.id };
   } catch (error) {
-    console.error("❌ Resend email failed:", error);
-    throw error;
+    console.error('❌ Resend email error:', error.message);
+    console.error('❌ Full error:', error);
+    return { success: false, error: error.message };
   }
 }
 
-// Alias functions that your controllers expect
-const sendFloatingFormNotification = async (data) => {
-  const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
-  return await sendEmail({
-    name: fullName,
-    email: data.email,
-    phone: data.phone,
-    message: data.message
-  });
-};
-
-const sendContactPageNotification = async (data) => {
-  const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
-  return await sendEmail({
-    name: fullName,
-    email: data.email,
-    phone: data.phone,
-    message: data.message
-  });
-};
-
-// Export all functions your controllers need
-module.exports = {
-  sendEmail,
-  sendFloatingFormNotification,
-  sendContactPageNotification
-};
+module.exports = sendEmail;

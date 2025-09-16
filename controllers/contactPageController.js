@@ -1,6 +1,8 @@
+// controllers/contactPageController.js - FINAL VERSION
 const ContactPageForm = require('../models/ContactPageForm');
-
 const sendEmail = require('../services/emailService');
+
+console.log('📄 ContactPageController loaded');
 
 // Get all contact page form submissions
 exports.getAllContactPageForms = async (req, res) => {
@@ -47,6 +49,8 @@ exports.getContactPageForm = async (req, res) => {
 // Create a new contact page form submission
 exports.createContactPageForm = async (req, res) => {
   try {
+    console.log('📝 Contact page form submission received:', req.body);
+    
     const { firstName, lastName, email, phone, message } = req.body;
     
     // Create contact form in database
@@ -58,23 +62,30 @@ exports.createContactPageForm = async (req, res) => {
       message
     });
     
-    // Send email notification
-    const fullName = `${firstName} ${lastName || ''}`.trim();
-const emailResult = await sendEmail({
-  name: fullName,
-  email,
-  phone,
-  message
-});
+    console.log('💾 Contact form saved to database');
     
-    console.log('Email notification result:', emailResult);
+    // Send email notification using Resend
+    console.log('📧 Attempting to send email notification...');
+    const fullName = `${firstName} ${lastName || ''}`.trim();
+    
+    const emailResult = await sendEmail({
+      name: fullName,
+      email,
+      phone,
+      message
+    });
+    
+    console.log('📧 Email notification result:', emailResult);
     
     res.status(201).json({
       success: true,
       data: contactForm,
       emailSent: emailResult.success
     });
+    
   } catch (error) {
+    console.error('❌ ContactPage error:', error);
+    
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map(val => val.message);
       
@@ -85,7 +96,8 @@ const emailResult = await sendEmail({
     } else {
       res.status(500).json({
         success: false,
-        error: 'Server Error'
+        error: 'Server Error',
+        details: error.message
       });
     }
   }

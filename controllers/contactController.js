@@ -1,22 +1,31 @@
+// controllers/contactController.js - FINAL VERSION
 const Contact = require('../models/Contact');
-
 const sendEmail = require('../services/emailService');
+
+console.log('📞 ContactController loaded');
 
 // Submit contact form
 exports.submitContact = async (req, res) => {
   try {
+    console.log('📝 Contact form submission received:', req.body);
+    
     const newContact = new Contact(req.body);
     const contact = await newContact.save();
     
-    // Send email notification
+    console.log('💾 Contact saved to database');
+    
+    // Send email notification using Resend
+    console.log('📧 Attempting to send email notification...');
     const fullName = `${req.body.firstName || ''} ${req.body.lastName || ''}`.trim();
-const emailResult = await sendEmail({
-  name: fullName,
-  email: req.body.email,
-  phone: req.body.phone,
-  message: req.body.message
-});
-    console.log('Email notification result:', emailResult);
+    
+    const emailResult = await sendEmail({
+      name: fullName,
+      email: req.body.email,
+      phone: req.body.phone,
+      message: req.body.message
+    });
+    
+    console.log('📧 Email notification result:', emailResult);
     
     res.json({ 
       success: true, 
@@ -24,8 +33,11 @@ const emailResult = await sendEmail({
       emailSent: emailResult.success 
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: 'Server Error' });
+    console.error('❌ Contact controller error:', err);
+    res.status(500).json({ 
+      message: 'Server Error',
+      details: err.message 
+    });
   }
 };
 
