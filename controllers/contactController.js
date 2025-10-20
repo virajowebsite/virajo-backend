@@ -1,6 +1,6 @@
 // controllers/contactController.js - FINAL VERSION
 const Contact = require('../models/Contact');
-const sendEmail = require('../services/emailService');
+const { sendEmail } = require('../services/emailService');
 
 console.log('📞 ContactController loaded');
 

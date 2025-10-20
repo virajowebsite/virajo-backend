@@ -1,6 +1,6 @@
 // controllers/contactPageController.js - FINAL VERSION
 const ContactPageForm = require('../models/ContactPageForm');
-const sendEmail = require('../services/emailService');
+const { sendEmail } = require('../services/emailService');
 
 console.log('📄 ContactPageController loaded');
 
